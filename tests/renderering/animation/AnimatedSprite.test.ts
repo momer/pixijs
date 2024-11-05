@@ -534,4 +534,70 @@ describe('AnimatedSprite', () =>
             expect(count).toBe(2);
         });
     });
+
+    describe('.update()', () => {
+        let sprite: AnimatedSprite;
+
+        beforeEach(() => {
+            sprite = new AnimatedSprite([Texture.EMPTY, Texture.WHITE, Texture.EMPTY]);
+            sprite.animationSpeed = 0.5;
+            sprite.loop = true;
+        });
+
+        afterEach(() => {
+            sprite.destroy();
+            sprite = null;
+        });
+
+        it('should continue playing after the initial loop', () => {
+            let count = 0;
+
+            sprite.gotoAndStop(0);
+            sprite.onLoop = () => { ++count; };
+            sprite.autoUpdate = false;
+            sprite.play();
+
+            sprite.update(ticker5);
+            expect(count).toBe(0);
+
+            sprite.update(ticker1);
+            expect(count).toBe(1);
+            sprite.update(ticker1);
+            expect(count).toBe(1);
+            expect(sprite.playing).toBe(true);
+            sprite.loop = false;
+
+            expect(sprite.playing).toBe(true);
+            sprite.update(ticker1);
+            expect(count).toBe(1);
+            expect(sprite.playing).toBe(true);
+        });
+
+
+        it('should continue playing after the initial loop - reverse', () => {
+            let count = 0;
+
+            sprite.animationSpeed = -0.5;
+
+            sprite.gotoAndStop(0);
+            sprite.onLoop = () => { ++count; };
+            sprite.autoUpdate = false;
+            sprite.play();
+
+            sprite.update(ticker5);
+            expect(count).toBe(0);
+
+            sprite.update(ticker1);
+            expect(count).toBe(0);
+            sprite.update(ticker1);
+            expect(count).toBe(1);
+            expect(sprite.playing).toBe(true);
+            sprite.loop = false;
+
+            expect(sprite.playing).toBe(true);
+            sprite.update(ticker1);
+            expect(count).toBe(1);
+            expect(sprite.playing).toBe(true);
+        });
+    });
 });
