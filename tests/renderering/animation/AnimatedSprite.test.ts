@@ -3,6 +3,9 @@ import { AnimatedSprite } from '../../../src/scene/sprite-animated/AnimatedSprit
 
 import type { Ticker } from '../../../src/ticker/Ticker';
 
+import { debug } from "console";
+
+
 const ticker1 = { deltaTime: 1 } as Ticker;
 const ticker4 = { deltaTime: 4 } as Ticker;
 const ticker5 = { deltaTime: 5 } as Ticker;
@@ -290,7 +293,7 @@ describe('AnimatedSprite', () =>
         it('should fire every frame(except current) during one play', () =>
             new Promise<void>((done) =>
             {
-                jest.setTimeout(10000);
+                jest.setTimeout(1000);
                 const frameIds = [] as number[];
 
                 sprite.gotoAndStop(0);
@@ -320,7 +323,7 @@ describe('AnimatedSprite', () =>
         it('should fire every frame(except current) during one play - reverse', () =>
             new Promise<void>((done) =>
             {
-                jest.setTimeout(10000);
+                jest.setTimeout(1000);
                 const frameIds = [] as number[];
 
                 sprite.gotoAndStop(2);
@@ -343,12 +346,13 @@ describe('AnimatedSprite', () =>
                 sprite.update(ticker1);
                 sprite.update(ticker1);
                 sprite.update(ticker1);
+                debug('current time:', sprite.currentFrame);
             }));
 
         it('should fire every frame(except current) during one play - from not start/end', () =>
             new Promise<void>((done) =>
             {
-                jest.setTimeout(10000);
+                jest.setTimeout(1000);
                 const frameIds = [] as number[];
 
                 sprite.gotoAndStop(1);

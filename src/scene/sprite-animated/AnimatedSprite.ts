@@ -283,19 +283,22 @@ export class AnimatedSprite extends Sprite
             this._currentTime += elapsed;
         }
 
-        // Handle scenarios when animation reaches the start or the end.
-        if (this._currentTime < 0 && !this.loop)
-        {
-            // If the animation shouldn't loop and it reaches the start, go to the first frame.
-            this.gotoAndStop(0);
-
-            // If there's an onComplete callback, call it.
-            if (this.onComplete)
-            {
-                this.onComplete();
-            }
-        }
-        else if (this._currentTime >= this._textures.length && !this.loop)
+        console.log('current time: ', this._currentTime);
+        if (
+            // Have we executed the texture completely at least once?
+            (
+                (this.animationSpeed > 0 && (this._currentTime >= this._textures.length))
+                || (this.animationSpeed < 0 && (-1 * this._currentTime >= this._textures.length))
+            )
+            // Should we stop looping?
+            && !this.loop
+            // Are we in the middle of an animation frame? For +animationSpeed, We can tell if we are still incrementing.
+            // If the previous frame was ahead in the sequence, we've looped around, and should exit.
+            //&& (
+            //    (this.animationSpeed > 0 && (this._previousFrame > this.currentFrame))
+            //    || (this.animationSpeed < 0 && (this._previousFrame < this.currentFrame))
+            //)
+        )
         {
             // If the animation shouldn't loop and it reaches the end, go to the last frame.
             this.gotoAndStop(this._textures.length - 1);
