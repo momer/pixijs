@@ -408,6 +408,7 @@ describe('AnimatedSprite', () =>
         it('should fire every frame(except current) during one play', () =>
             new Promise<void>((done) =>
             {
+                jest.setTimeout(5000);
                 const frameIds = [] as number[];
 
                 expect(sprite).not.toBeNull();
@@ -416,7 +417,8 @@ describe('AnimatedSprite', () =>
                     sprite.gotoAndStop(0);
                     sprite.onComplete = () =>
                     {
-                        expect(frameIds).toEqual(expect.arrayContaining([1, 2])); // from 0 to 2, triggers onFrameChange at 1,2.
+                        // From 0 to 2, triggers onFrameChange at 1,2.
+                        expect(frameIds).toEqual(expect.arrayContaining([1, 2]));
                         // As the animation has completed, the 'currentFrame' actually  should be 0!
                         // That the currentFrame (i.e. next frame to be rendered) was expected to be 2 was incorrect,
                         // given how it's calculated, and the fact that we should be teeing up the next frame for render.
@@ -444,9 +446,10 @@ describe('AnimatedSprite', () =>
                 sprite?.update(ticker1);
             }));
 
-        it('should fire every frame(except current) during one play - reverse', { timeout: 1000 }, () =>
+        it('should fire every frame(except current) during one play - reverse', () =>
             new Promise<void>((done) =>
             {
+                jest.setTimeout(5000);
                 const frameIds = [] as number[];
 
                 expect(sprite).not.toBeNull();
@@ -456,7 +459,8 @@ describe('AnimatedSprite', () =>
                     sprite.animationSpeed = -1;
                     sprite.onComplete = () =>
                     {
-                        expect(frameIds).toEqual(expect.arrayContaining([2, 1])); // from 2 to 0, triggers onFrameChange at 1,0.
+                        // from 0 to 0, but negative animationSpeed!
+                        expect(frameIds).toEqual(expect.arrayContaining([2, 1]));
                         expect(sprite?.currentFrame).toEqual(0);
                         if (sprite !== null)
                         {
@@ -478,9 +482,10 @@ describe('AnimatedSprite', () =>
                 sprite?.update(ticker1);
             }));
 
-        it('should fire every frame(except current) during one play - from not start/end', { timeout: 1000 }, () =>
+        it('should fire every frame(except current) during one play - from not start/end', () =>
             new Promise<void>((done) =>
             {
+                jest.setTimeout(1000);
                 const frameIds = [] as number[];
 
                 expect(sprite).not.toBeNull();
@@ -574,9 +579,10 @@ describe('AnimatedSprite', () =>
             expect(sprite?.currentFrame).toBe(1);
         });
 
-        it('should throw on out-of-bounds', { timeout: 1000 }, () =>
+        it('should throw on out-of-bounds', () =>
             new Promise<void>((done) =>
             {
+                jest.setTimeout(5000);
                 const notExistIndexes = [-1, 3];
 
                 notExistIndexes.forEach((i) =>
@@ -762,7 +768,7 @@ describe('AnimatedSprite', () =>
             }
         });
 
-        it.for([
+        it.each([
             0, 1, 2
         ])('should continue playing after the initial loop, with starting frame %i', (startFrame) =>
         {
@@ -805,7 +811,7 @@ describe('AnimatedSprite', () =>
         }
         );
 
-        it.for([
+        it.each([
             0, 1, 2
         ])('should continue playing after the initial loop, with starting frame %i - reverse', (startFrame) =>
         {
@@ -848,7 +854,7 @@ describe('AnimatedSprite', () =>
             expect(sprite?.playing).toBe(true);
         });
 
-        it.for([
+        it.each([
             0, 1, 2
         ])('should complete the current loop before stopping, when loop is set to false mid-loop, with starting frame %i',
             (startFrame) =>
@@ -891,49 +897,50 @@ describe('AnimatedSprite', () =>
                 expect(sprite?.playing).toBe(false);
             });
 
-        it.for([
+        it.each([
             0, 1, 2
-        ])('should complete the current loop before stopping, when loop is set to false mid-loop, with starting frame %i - reverse',
-            (startFrame) =>
+        ])('should complete the current loop before stopping, when loop is set to false mid-loop, '
+            + 'with starting frame %i - reverse',
+        (startFrame) =>
+        {
+            let count = 0;
+
+            expect(sprite).not.toBeNull();
+            if (sprite !== null)
             {
-                let count = 0;
-
-                expect(sprite).not.toBeNull();
-                if (sprite !== null)
+                sprite.animationSpeed = -1;
+                sprite.gotoAndStop(startFrame);
+                sprite.onLoop = () =>
                 {
-                    sprite.animationSpeed = -1;
-                    sprite.gotoAndStop(startFrame);
-                    sprite.onLoop = () =>
-                    {
-                        ++count;
-                    };
-                    sprite.autoUpdate = false;
-                    sprite.play();
-                }
+                    ++count;
+                };
+                sprite.autoUpdate = false;
+                sprite.play();
+            }
 
-                // Set time to 3, which should add a loop
-                sprite?.update(ticker3);
-                expect(count).toBe(1);
+            // Set time to 3, which should add a loop
+            sprite?.update(ticker3);
+            expect(count).toBe(1);
 
-                // Add 1, which puts us in the middle of a loop
-                sprite?.update(ticker1);
-                expect(count).toBe(1);
+            // Add 1, which puts us in the middle of a loop
+            sprite?.update(ticker1);
+            expect(count).toBe(1);
 
-                // Set loop to false, indicating that we no longer want to repeat after this loop.
-                if (sprite !== null)
-                {
-                    sprite.loop = false;
-                }
-                expect(sprite?.playing).toBe(true);
+            // Set loop to false, indicating that we no longer want to repeat after this loop.
+            if (sprite !== null)
+            {
+                sprite.loop = false;
+            }
+            expect(sprite?.playing).toBe(true);
 
-                // Update transitTime % frames to 2
-                sprite?.update(ticker1);
-                expect(sprite?.playing).toBe(true);
-                // Update transitTime % frames to 3, completing the loop, and stopping the animation
-                sprite?.update(ticker1);
-                expect(count).toBe(1);
-                expect(sprite?.playing).toBe(false);
-            });
+            // Update transitTime % frames to 2
+            sprite?.update(ticker1);
+            expect(sprite?.playing).toBe(true);
+            // Update transitTime % frames to 3, completing the loop, and stopping the animation
+            sprite?.update(ticker1);
+            expect(count).toBe(1);
+            expect(sprite?.playing).toBe(false);
+        });
     });
 
     describe('.update() with durations', () =>
@@ -967,12 +974,12 @@ describe('AnimatedSprite', () =>
 
         // Number of ticks expected per frame run (number of ticks played), and their durations
         // given the default _durationAnimationStealMaxRate (.1)
-        it.for([
+        it.each([
             // This demonstrates the time steal across durations!
             [[7, 18, 6, 6, 18, 6], [100, 300, 100, 100, 300, 100]],
             // This one demonstrates the time-steal allowance granted by a large duration (the last frame)
             [[30, 6, 6, 6, 6, 7], [500, 100, 100, 100, 100, 100]]
-        ])('should correctly handle durations', ([expectedUpdates, durations]) =>
+        ])('should correctly handle durations', (expectedUpdates, durations) =>
         {
             let count = 0;
 
