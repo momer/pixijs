@@ -1,12 +1,11 @@
 import { Texture } from '../../rendering/renderers/shared/texture/Texture';
 import { UPDATE_PRIORITY } from '../../ticker/const';
 import { Ticker } from '../../ticker/Ticker';
+import { warn } from '../../utils/logging/warn';
+import { quickRound } from '../../utils/math/floats';
 import { Sprite } from '../sprite/Sprite';
 
 import type { SpriteOptions } from '../sprite/Sprite';
-
-import { warn } from '../../utils/logging/warn';
-import { quickRound } from '../../utils/math/floats';
 
 export type AnimatedSpriteFrames = Texture[] | FrameObject[];
 
@@ -117,7 +116,13 @@ export class AnimatedSprite extends Sprite
      *     // Ticked!
      * };
      */
-    public onTickUpdate?: ((transitTime: number, currentTime: number, previousTime: number, currentFrame: number, previousFrame: number, ticker: Ticker) => void) | null | undefined;
+    public onTickUpdate?: ((
+        transitTime: number,
+        currentTime: number,
+        previousTime: number,
+        currentFrame: number,
+        previousFrame: number,
+        ticker: Ticker) => void) | null | undefined;
 
     private _playing: boolean;
     private _textures: Texture[] | null;
@@ -311,7 +316,7 @@ export class AnimatedSprite extends Sprite
         //
         // That use case should be handled within gotoAndPlay, as this function doesn't stop
         // the runtime.
-        this.initialFrame = this.currentFrame;
+        this._initialFrame = this.currentFrame;
 
         this._playing = true;
         this._transitTime = 0;
@@ -338,7 +343,7 @@ export class AnimatedSprite extends Sprite
      */
     public gotoAndPlay(frameNumber: number): void
     {
-        this.initialFrame = this.currentFrame = frameNumber;
+        this._initialFrame = this.currentFrame = frameNumber;
         this.play();
     }
 
@@ -492,7 +497,10 @@ export class AnimatedSprite extends Sprite
                     {
                         // The remaining time left of this frame, which it will lose out on, to be monitored by the
                         // next frame.
-                        this._durationPreviousFrameDonationMS = quickRound((1 - (this._currentTime % 1)) * previousFrameTargetDuration, 4);
+                        this._durationPreviousFrameDonationMS = quickRound(
+                            ((1 - (this._currentTime % 1)) * previousFrameTargetDuration),
+                            4
+                        );
                         this._currentTime = Math.floor(nextTimeFrame);
                     }
                 }
@@ -741,19 +749,16 @@ export class AnimatedSprite extends Sprite
         }
     }
 
-    private get initialFrame(): number
+    /** Set the initial frame of animation for looping and tracking purposes */
+    public get initialFrame(): number
     {
         if (this._initialFrame === null || this._initialFrame === undefined)
         {
-            throw new Error(`[AnimatedSprite]: internal access of initialFrame, but it was null or undefined (${this._initialFrame}).`);
+            throw new Error(`[AnimatedSprite]: internal access of initialFrame, but it `
+                + `was null or undefined (${this._initialFrame}).`);
         }
 
         return this._initialFrame;
-    }
-
-    private set initialFrame(value: number)
-    {
-        this._initialFrame = value;
     }
 
     /** Updates the displayed texture to match the current frame index. */
